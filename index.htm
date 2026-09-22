@@ -1089,6 +1089,128 @@
         }
     }
 </script>
+<!-- Add this right before </body> at the bottom of your HTML -->
+    <script>
+        // 1. HELPER FUNCTIONS FOR CLEAN FORMATTING
+        function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr) return 'Not Specified';
+            const dateObj = new Date(dateTimeStr);
+            if (isNaN(dateObj.getTime())) return dateTimeStr;
 
+            return dateObj.toLocaleString('en-US', {
+                weekday: 'short',
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+        }
+
+        function formatTime12Hour(timeStr) {
+            if (!timeStr) return 'Not Specified';
+            const parts = timeStr.split(':');
+            if (parts.length < 2) return timeStr;
+
+            let hours = parseInt(parts[0], 10);
+            const minutes = parts[1];
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+
+            return `${hours}:${minutes} ${ampm}`;
+        }
+
+        // 2. UI INTERACTION & DYNAMIC BLOCK HELPERS
+        function toggleAccordion(blockId) {
+            const block = document.getElementById(blockId);
+            if (block) {
+                block.classList.toggle('collapsed');
+            }
+        }
+
+        function updateActivityTitle(index, value) {
+            const titleDisplay = document.getElementById(`activity_title_display_${index}`);
+            if (titleDisplay) {
+                titleDisplay.textContent = value.trim() ? value.toUpperCase() : `ACTIVITY ${index} ENTRY`;
+            }
+        }
+
+        function addDateTimeRow(containerId, activityNum) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                const newRow = document.createElement('div');
+                newRow.className = 'datetime-row';
+                newRow.innerHTML = `
+                    <input type="datetime-local" name="Activity_${activityNum}_DateTime[]" class="activity-datetime">
+                    <button type="button" class="remove-datetime-btn" onclick="this.parentElement.remove()">✕</button>
+                `;
+                container.appendChild(newRow);
+            }
+        }
+
+        function toggleExtensionFields(value) {
+            const extensionContainer = document.getElementById('extensionFields');
+            if (extensionContainer) {
+                extensionContainer.style.display = (value === 'Yes') ? 'block' : 'none';
+            }
+        }
+
+        // 3. FORM SUBMISSION HANDLER
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('logisticsForm');
+
+            if (!form) return;
+
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+
+                const formData = new FormData(this);
+                const payload = {};
+
+                for (let [key, value] of formData.entries()) {
+                    if (!value) continue;
+
+                    if (key.includes('DateTime') || key.includes('date')) {
+                        payload[key] = formatDateTime(value);
+                    } 
+                    else if (key.includes('TimeIn') || key.includes('TimeOut') || key.includes('extensionTime')) {
+                        payload[key] = formatTime12Hour(value);
+                    } 
+                    else {
+                        payload[key] = value;
+                    }
+                }
+
+                payload.access_key = "YOUR_WEB3FORMS_ACCESS_KEY_HERE"; 
+                payload.subject = `New DPPL Booking Request from ${payload.fullNamePosition || 'Student'}`;
+
+                try {
+                    const response = await fetch('https://api.web3forms.com/submit', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        alert('Form submitted successfully!');
+                        this.reset();
+                    } else {
+                        alert('Submission failed: ' + result.message);
+                    }
+                } catch (error) {
+                    console.error('Error submitting form:', error);
+                    alert('An error occurred while submitting the form.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
 </body>
 </html>
