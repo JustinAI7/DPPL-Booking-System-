@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>DPPL Request Portal</title>
+<title>DPPL Booking System</title>
 <meta name="description" content="Submit venue, entry permit, gate pass, office extension and transport requests to UNORSSG's Department of Physical Projects & Logistics.">
 <meta name="theme-color" content="#14315f">
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
@@ -115,8 +115,7 @@ footer{color:var(--mute);font-size:.85rem;padding:0 0 32px}
 <a href="#f" class="skip">Skip to form</a>
 <header><div class="wrap top">
 <div class="logo"><span>D</span><img src="dppl_2.jpg" alt="" onerror="this.remove()"></div>
-<div><h1>Department of Physical Projects &amp; Logistics</h1>
-<p>Venues, equipment, entry permits, gate passes, office extensions and transport in one request.</p></div>
+<div><h1>Department of Physical Projects &amp; Logistics</h1></div>
 </div></header>
 <div class="how"><div class="wrap"><ol>
 <li><div><b>Submit your request</b><span>Your compliance details and what you need</span></div></li>
@@ -142,7 +141,7 @@ footer{color:var(--mute);font-size:.85rem;padding:0 0 32px}
 <div class="err" id="rerr" role="alert"></div>
 <div class="rbtns">
 <button class="lnk" id="reviewEdit" type="button">&larr; Edit</button>
-<button class="pri" id="reviewConfirm" type="button">Confirm &amp; submit</button>
+<button class="pri" id="reviewConfirm" type="button">Confirm &amp; Submit</button>
 </div>
 </div>
 
@@ -151,17 +150,17 @@ footer{color:var(--mute);font-size:.85rem;padding:0 0 32px}
 <section class="card">
 <h2><i class="n">1</i>Requester</h2><p class="sub">Who is making this request?</p>
 <div class="grid">
-<label class="f">Full name and position<input id="name" required autocomplete="name" placeholder="e.g. Juan Dela Cruz, Auditor"></label>
+<label class="f">Full name and Position<input id="name" required autocomplete="name" placeholder="e.g. Justin Gabriel Nanquil, DPPL Secretary"></label>
 <label class="f">Branch<select id="branch" required><option value="">Select branch</option><option>Executive Branch</option><option>Legislative Branch</option><option>Judiciary Branch</option></select></label>
-<label class="f full">Contact number<input id="contact" type="tel" required autocomplete="tel" placeholder="e.g. 0917 123 4567"></label>
+<label class="f full">Contact Number or Messenger Name<input id="contact" type="tel" required autocomplete="tel" placeholder="e.g. 0917 123 4567"></label>
 </div></section>
 
 <section class="card">
 <h2><i class="n">2</i>Event details</h2><p class="sub">Fill this in once. It applies to everything you request below.</p>
 <div class="grid">
-<label class="f full">Event title<input id="title"></label>
-<label class="f full">Purpose (one or two sentences)<textarea id="purpose"></textarea></label>
-<label class="f">Activity type<select id="atype"><option>Official event</option><option>Rehearsal / technical run</option><option>Setup / ingress</option></select></label>
+<label class="f full">Event Title<input id="title"></label>
+<label class="f full">Purpose<textarea id="purpose"></textarea></label>
+<label class="f">Activity Type<select id="atype"><option>Official Event</option><option>Rehearsal / Technical run</option><option>Setup / Ingress</option></select></label>
 </div>
 <div style="margin-top:14px"><b style="font-size:.9rem;font-weight:500">Dates and times</b>
 <div id="dates"></div>
@@ -315,7 +314,7 @@ let booked=[];
 async function checkAvail(){
   const v=$('venue').value,box=$('avail');booked=[];box.innerHTML='';
   if(!on().includes('venue')||!v||v==='Other area')return;
-  box.innerHTML='<div class="av ok">DPPL will check availability and contact you before confirmation.</div>';
+  box.innerHTML='<div class="av ok">We will check the availability and contact you before confirmation.</div>';
 }
 document.addEventListener('change',checkAvail);
 function conflicts(){const o=[];rowsOf('vdates').forEach(x=>{booked.forEach(b=>{if(b.date===x.date&&(!x.start||!x.end||(x.start<b.end&&x.end>b.start)))o.push(b)})});return o}
