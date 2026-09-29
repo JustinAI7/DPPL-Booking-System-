@@ -311,15 +311,12 @@ document.querySelectorAll('[data-m]').forEach(cb=>cb.addEventListener('change',(
 }));
 function onScroll(){hdr.classList.toggle('scrolled',window.scrollY>24)}
 window.addEventListener('scroll',onScroll,{passive:true});onScroll();
-const SCRIPT_URL=''; // paste your Apps Script web app URL here. Empty = demo mode.
 let booked=[];
 async function checkAvail(){
- const v=$('venue').value,box=$('avail');booked=[];box.innerHTML='';
- if(!SCRIPT_URL||!on().includes('venue')||!v||v==='Other area')return;
- const ds=[...new Set(rowsOf('vdates').map(x=>x.date))];
- if(!ds.length)return;
- try{const r=await fetch(SCRIPT_URL+'?venue='+encodeURIComponent(v)+'&dates='+ds.join(','));booked=(await r.json()).booked||[]}catch(e){return}
- box.innerHTML=booked.length?'<div class="av no">Already booked: '+booked.map(b=>fmt(b.date)+' '+b.start+' to '+b.end).join('; ')+'</div>':'<div class="av ok">This venue is free on those dates &mdash; DPPL will still confirm before you proceed.</div>'}
+  const v=$('venue').value,box=$('avail');booked=[];box.innerHTML='';
+  if(!on().includes('venue')||!v||v==='Other area')return;
+  box.innerHTML='<div class="av ok">DPPL will check availability and contact you before confirmation.</div>';
+}
 document.addEventListener('change',checkAvail);
 function conflicts(){const o=[];rowsOf('vdates').forEach(x=>{booked.forEach(b=>{if(b.date===x.date&&(!x.start||!x.end||(x.start<b.end&&x.end>b.start)))o.push(b)})});return o}
 function validate(){
@@ -357,25 +354,57 @@ function showReview(){
  renderReview();$('rerr').textContent='';
  $('app').style.display='none';$('mbar').style.display='none';$('review').style.display='block';window.scrollTo(0,0)}
 async function confirmSubmit(){
- const btn=$('reviewConfirm');btn.disabled=true;btn.textContent='Sending...';
- let ref='DPPL-'+new Date().getFullYear()+'-'+Math.random().toString(36).slice(2,7).toUpperCase();
- try{
-  if(SCRIPT_URL){
-   const j=await (await fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify(buildData())})).json();
-   if(!j.ref)throw 0;ref=j.ref}
-  $('ref').textContent=ref;$('review').style.display='none';$('done').style.display='block';clearDraft();window.scrollTo(0,0)
- }catch(e){$('rerr').textContent='The request could not be sent. Check your connection and try again.'}
- btn.disabled=false;btn.textContent='Confirm & submit'}
+  const btn=$('reviewConfirm');
+  btn.disabled=true;
+  btn.textContent='Sending...';
+  $('rerr').textContent='';
+
+  const ref='DPPL-'+new Date().getFullYear()+'-'+Math.random().toString(36).slice(2,7).toUpperCase();
+  const data=buildData();
+
+  try{
+    const formData=new FormData();
+    formData.append('access_key','05f9c8ae-400a-449f-b584-e3672ccfddda');
+    formData.append('subject','UNORSSG DPPL Booking Details');
+    formData.append('from_name','UNORSSG DPPL Booking System');
+    formData.append('reference',ref);
+    formData.append('name',data.name);
+    formData.append('contact',data.contact);
+    formData.append('branch',data.branch);
+    formData.append('event_title',data.title || 'Untitled event');
+    formData.append('purpose',data.purpose || '');
+    formData.append('services',data.services.join(', ') || 'None selected');
+    formData.append('venue',data.venue || '');
+    formData.append('request',JSON.stringify(data,null,2));
+
+    const response=await fetch('https://api.web3forms.com/submit',{
+      method:'POST',
+      body:formData
+    });
+    const result=await response.json();
+
+    if(!response.ok || !result.success){
+      throw new Error(result.message || 'Submission failed');
+    }
+
+    $('ref').textContent=ref;
+    $('review').style.display='none';
+    $('done').style.display='block';
+    clearDraft();
+    window.scrollTo(0,0);
+  }catch(e){
+    $('rerr').textContent='The request could not be sent. Please check your connection and try again.';
+  }
+
+  btn.disabled=false;
+  btn.textContent='Confirm & submit';
+}
 $('submit').onclick=showReview;$('submit2').onclick=showReview;
 $('reviewEdit').onclick=()=>{$('review').style.display='none';$('app').style.display='grid';$('mbar').style.display=''};
 $('reviewConfirm').onclick=confirmSubmit;
 $('clear').onclick=()=>{$('f').reset();$('dates').innerHTML='';addDate();clearDraft();upd()};
 $('again').onclick=()=>{$('clear').click();$('done').style.display='none';$('app').style.display='grid';$('mbar').style.display=''};
-     <form action="https://api.web3forms.com/submit" method="POST" id="submissionForm">
-            <input type="hidden" name="access_key" value="05f9c8ae-400a-449f-b584-e3672ccfddda">
-            <input type="hidden" name="subject" value="UNORSSG DPPL Booking Details">
-            <input type="hidden" name="from_name" value="UNORSSG DPPL Booking Sytem">
-            <input type="hidden" name="redirect" value="https://web3forms.com/success">
+     
 
 </script>
 </body>
