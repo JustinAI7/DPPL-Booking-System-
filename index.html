@@ -14,7 +14,6 @@ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:en
 :root[data-theme="dark"]{--bg:#0d1320;--card:#151d2e;--ink:#e8ecf3;--mute:#9aa6ba;--line:#28344a;--brand:#7fa6e6;--brand-ink:#0a1526;--gold:#e0b445;--tint:#1b2740;--err:#f2867e}
 *{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 "Public Sans",system-ui,sans-serif}
-@media(max-width:860px){body{padding-bottom:calc(78px + env(safe-area-inset-bottom,0px))}}
 h1,h2,h3{font-family:"Source Serif 4",Georgia,serif;margin:0;line-height:1.2}
 header{background:var(--brand);color:var(--brand-ink);border-bottom:4px solid var(--gold);position:sticky;top:0;z-index:40;padding-top:env(safe-area-inset-top,0px);transition:box-shadow .25s}
 header.scrolled{box-shadow:0 6px 18px rgba(0,0,0,.18)}
@@ -86,13 +85,6 @@ button.pri{background:var(--brand);color:var(--brand-ink);border-color:var(--bra
 button.lnk{border:0;background:none;color:var(--brand);padding:4px 0;font-weight:500}
 button.x{padding:10px 12px;min-width:44px;min-height:44px}
 aside{position:sticky;top:16px}
-.mbar{display:none}
-@media(max-width:860px){
- .mbar{display:flex;gap:12px;align-items:center;position:fixed;left:0;right:0;bottom:0;z-index:30;
-  background:var(--card);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 14px rgba(0,0,0,.08)}
- .mbar span{flex:1;font-size:.82rem;color:var(--mute);line-height:1.3}
- .mbar button{flex:none;width:auto;padding:12px 20px}
-}
 .sum{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:20px}
 .sum h2{font-size:1.1rem;margin-bottom:10px}
 .sum ul{list-style:none;margin:0 0 14px;padding:0;font-size:.9rem}
@@ -249,7 +241,6 @@ footer{color:var(--mute);font-size:.85rem;padding:0 0 32px}
 </main>
 <footer>&copy; UNORSSG Department of Physical Projects &amp; Logistics</footer>
 </div>
-<div class="mbar" id="mbar"><span id="mbarText">Fill in the form above</span><button class="pri" id="submit2" type="button">Submit</button></div>
 
 <script>
 const $=id=>document.getElementById(id),val=i=>$(i)?$(i).value.trim():'',L={venue:'Venue',equip:'Equipment and operator',entry:'Entry permit',gate:'Gate pass',ext:'Office extension',trans:'Transportation'};
@@ -266,7 +257,6 @@ function upd(){
  const a=on();document.querySelectorAll('.mod').forEach(m=>m.classList.toggle('open',a.includes(m.id.slice(2))));
  $('otherW').hidden=$('venue').value!=='Other area';
  const ds=[...document.querySelectorAll('.dd')].filter(d=>d.value).map(d=>d.value).sort();
- $('mbarText').textContent=(val('title')||'Untitled event')+' \u00b7 '+(a.length?a.length+' service'+(a.length>1?'s':''):'no services yet');
  let h='<li><span>Event</span><span>'+esc($('title').value||'Not set')+'</span></li><li><span>Date'+(ds.length>1?'s':'')+'</span><span>'+(ds.length?ds.map(fmt).join(', '):'Not set')+'</span></li>';
  h+=a.length?a.map(k=>{
    if(k==='entry')return '<li><span>Entry permit</span><span>'+esc($('efac').value||'Facility not set')+'</span></li>';
@@ -335,6 +325,26 @@ function buildData(){
   vtype:val('vtype'),pax:val('pax'),depdate:val('depdate'),deptime:val('deptime'),arrdate:val('arrdate'),arrtime:val('arrtime'),tpurpose:val('tpurpose'),
   dates:[...document.querySelectorAll('.row')].map(r=>({date:r.querySelector('.dd')?r.querySelector('.dd').value:'',start:r.querySelector('.ds')?r.querySelector('.ds').value:'',end:r.querySelector('.de')?r.querySelector('.de').value:''})).filter(x=>x.date)}}
 function dl(rows){return '<dl>'+rows.map(r=>'<dt>'+esc(r[0])+'</dt><dd>'+esc(String(r[1]||'\u2014'))+'</dd>').join('')+'</dl>'}
+const SVC_TITLE={venue:'Venue',equip:'Equipment and Operator',entry:'Entry Permit',gate:'Gate Pass',ext:'Office Extension',trans:'Transportation'};
+function fmtDatesArr(arr){return (arr&&arr.length)?arr.map(x=>x.date+(x.start?' '+x.start+(x.end?'-'+x.end:''):'')).join('; '):''}
+function svcRowsFromData(k,d){
+ if(k==='venue')return[['Campus venue',d.venue],['Date(s) & time',fmtDatesArr(d.vdates)]];
+ if(k==='equip')return[['Materials needed',d.mats],['Technical operator',d.op]];
+ if(k==='entry')return[['Facilities to be used',d.efac],['Purpose',d.epurpose],['Guest access date(s)',fmtDatesArr(d.edates)],['Guest time in/out',(d.gin||'\u2014')+' to '+(d.gout||'\u2014')],['Guest list',d.guests]];
+ if(k==='gate')return[['Facilities to be used',d.gfac],['Purpose',d.gpurpose],['Gate pass date(s)',fmtDatesArr(d.gdates)],['Time in/out',(d.gtimein||'\u2014')+' to '+(d.gtimeout||'\u2014')],['Bearer',d.bearer],['Items',d.items]];
+ if(k==='ext')return[['Extension date(s)',fmtDatesArr(d.xdates)],['Until what time',d.until],['Reason',d.ereason]];
+ if(k==='trans')return[['Vehicle',d.vtype],['Passengers',d.pax],['Departure',d.depdate?d.depdate+' '+(d.deptime||''):''],['Arrival',d.arrdate?d.arrdate+' '+(d.arrtime||''):''],['Purpose',d.tpurpose]];
+ return[]}
+function sectionText_(title,rows){
+ const filled=rows.filter(r=>r[1]&&String(r[1]).trim());
+ if(!filled.length)return'';
+ return '== '+title.toUpperCase()+' ==\n'+filled.map(r=>r[0]+': '+r[1]).join('\n')}
+function buildEmailText(d,ref){
+ const parts=['Reference: '+ref];
+ parts.push(sectionText_('Requester',[['Name',d.name],['Contact number',d.contact],['Branch',d.branch]]));
+ parts.push(sectionText_('Event',[['Title',d.title],['Purpose',d.purpose],['Type',d.atype],['Date(s)',fmtDatesArr(d.dates)]]));
+ (d.services||[]).forEach(k=>parts.push(sectionText_(SVC_TITLE[k]||k,svcRowsFromData(k,d))));
+ return parts.filter(Boolean).join('\n\n')}
 function svcDetails(k){
  if(k==='venue')return{title:'Venue',rows:[['Campus venue',val('venue')==='Other area'?val('other'):val('venue')],['Date(s) & time',rowsOf('vdates').map(x=>fmt(x.date)+(x.start?' '+x.start+(x.end?'-'+x.end:''):'')).join('; ')]]};
  if(k==='equip')return{title:'Equipment and operator',rows:[['Materials needed',val('mats')],['Technical operator',val('op')]]};
@@ -351,8 +361,9 @@ function renderReview(){
 function showReview(){
  if(!validate())return;
  renderReview();$('rerr').textContent='';
- $('app').style.display='none';$('mbar').style.display='none';$('review').style.display='block';window.scrollTo(0,0)}
+ $('app').style.display='none';$('review').style.display='block';window.scrollTo(0,0)}
 async function confirmSubmit(){
+  $('app').style.display='none'; // defensive: the form must never show behind the review screen
   const btn=$('reviewConfirm');
   btn.disabled=true;
   btn.textContent='Sending...';
@@ -364,17 +375,13 @@ async function confirmSubmit(){
   try{
     const formData=new FormData();
     formData.append('access_key','05f9c8ae-400a-449f-b584-e3672ccfddda');
-    formData.append('subject','UNORSSG DPPL Booking Details');
+    formData.append('subject','UNORSSG DPPL Booking Request \u2014 '+ref+' ('+(data.title||'Untitled event')+')');
     formData.append('from_name','UNORSSG DPPL Booking System');
-    formData.append('reference',ref);
-    formData.append('name',data.name);
-    formData.append('contact',data.contact);
-    formData.append('branch',data.branch);
-    formData.append('event_title',data.title || 'Untitled event');
-    formData.append('purpose',data.purpose || '');
-    formData.append('services',data.services.join(', ') || 'None selected');
-    formData.append('venue',data.venue || '');
-    formData.append('request',JSON.stringify(data,null,2));
+    formData.append('Reference',ref);
+    formData.append('Requester',data.name+' \u2014 '+data.branch);
+    formData.append('Contact',data.contact);
+    formData.append('Services requested',data.services.map(k=>SVC_TITLE[k]||k).join(', ')||'None selected');
+    formData.append('Full request details',buildEmailText(data,ref));
 
     const response=await fetch('https://api.web3forms.com/submit',{
       method:'POST',
@@ -392,17 +399,18 @@ async function confirmSubmit(){
     clearDraft();
     window.scrollTo(0,0);
   }catch(e){
-    $('rerr').textContent='The request could not be sent. Please check your connection and try again.';
+    $('rerr').textContent='The request could not be sent'+(e&&e.message?': '+e.message:'')+'. Check your connection and try again.';
+    $('app').style.display='none'; // stay on the review screen, not back behind it
   }
 
   btn.disabled=false;
   btn.textContent='Confirm & submit';
 }
-$('submit').onclick=showReview;$('submit2').onclick=showReview;
-$('reviewEdit').onclick=()=>{$('review').style.display='none';$('app').style.display='grid';$('mbar').style.display=''};
+$('submit').onclick=showReview;
+$('reviewEdit').onclick=()=>{$('review').style.display='none';$('app').style.display='grid'};
 $('reviewConfirm').onclick=confirmSubmit;
 $('clear').onclick=()=>{$('f').reset();$('dates').innerHTML='';addDate();clearDraft();upd()};
-$('again').onclick=()=>{$('clear').click();$('done').style.display='none';$('app').style.display='grid';$('mbar').style.display=''};
+$('again').onclick=()=>{$('clear').click();$('done').style.display='none';$('app').style.display='grid'};
      
 
 </script>
